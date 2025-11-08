@@ -89,6 +89,8 @@ export default function MapCanvas({
     const container = containerRef.current
 
     if (!container) {
+      // eslint-disable-next-line no-console
+      console.warn('Map container ref not found; Google Map will not initialize.')
       return
     }
 
