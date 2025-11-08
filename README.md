@@ -25,13 +25,15 @@ npm install
 
 ### Environment Setup
 
-Create a `.env.local` file:
+Create a `.env.local` file (see `.env.example` for the authoritative list):
 
 ```
-GOOGLE_MAPS_API_KEY=your-api-key-here
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-browser-key
 TFL_APP_ID=your-tfl-app-id (optional)
 TFL_APP_KEY=your-tfl-app-key (optional)
 ```
+
+Only variables prefixed with `NEXT_PUBLIC_` are exposed to the client. Keep any secret (if added later) unprefixed and server-only.
 
 ### Development
 
@@ -44,8 +46,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ### Building for Production
 
 ```bash
-npm run build
-npm run start:static
+npm run build    # builds + exports static site to ./out
+npm run start:static  # serves exported static site locally
 ```
 
 ### Testing
@@ -61,11 +63,14 @@ npm run test:e2e
 npm run audit:accessibility
 ```
 
-### Data Refresh
+### Data Refresh & Validation
 
 ```bash
-npm run data:refresh
+npm run data:validate   # schema + integrity checks
+npm run data:refresh    # fetch + transform latest TfL data
 ```
+
+The build pipeline runs `data:validate` automatically before `data:refresh`.
 
 ## Project Structure
 

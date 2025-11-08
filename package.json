@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run data:refresh && next build",
+    "prebuild": "npm run data:validate",
+    "build": "npm run data:refresh && next build && next export",
     "start": "next start",
     "start:static": "npx serve@latest out",
     "lint": "next lint",
@@ -43,7 +44,7 @@
     "typescript": "^5.4.0"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": "20.x",
+    "npm": "10.x"
   }
 }

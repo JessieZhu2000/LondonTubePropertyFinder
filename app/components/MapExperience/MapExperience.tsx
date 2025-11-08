@@ -1,7 +1,7 @@
 "use client"
 // Restored client directive so that stateful hooks and map initialization run properly.
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { describeActiveLines } from '@/app/lib/a11y'
 import LineFilter from '@/app/components/LineFilter/LineFilter'
 import MapCanvas, { type MapStatus } from '@/app/components/MapCanvas/MapCanvas'
@@ -16,7 +16,7 @@ export default function MapExperience({ dataset }: MapExperienceProps) {
   const { lines, stations, metadata } = dataset
   // Empty array => show all lines (MapCanvas treats no active codes as full network)
   const [activeLineCodes, setActiveLineCodes] = useState<string[]>([])
-  const announceRef = useState<string>('')[0] // placeholder state for live region text
+  const [liveMessage, setLiveMessage] = useState<string>('')
   const handleFilterChange = useCallback((codes: string[]) => {
     setActiveLineCodes(codes)
   }, [])
@@ -28,10 +28,19 @@ export default function MapExperience({ dataset }: MapExperienceProps) {
     return counts
   }, [lines])
   const handleAnnounce = useCallback((msg: string) => {
-    // Could store for an actual live region later if needed
+    setLiveMessage(msg)
     // eslint-disable-next-line no-console
     console.info('live-region:', msg)
   }, [])
+
+  // Push announcements into hidden live region in layout
+  useEffect(() => {
+    if (!liveMessage) return
+    const region = document.getElementById('live-region')
+    if (region) {
+      region.textContent = liveMessage
+    }
+  }, [liveMessage])
   const [selectedStation, setSelectedStation] = useState<Station | null>(null)
   const [mapStatus, setMapStatus] = useState<MapStatus>('idle')
 
@@ -42,7 +51,7 @@ export default function MapExperience({ dataset }: MapExperienceProps) {
   )
 
   return (
-    <div className="map-experience" aria-live="polite">
+  <div className="map-experience">
       <header className="map-experience__header-inline">
         <h1 className="map-title">London Tube &amp; DLR Network</h1>
         <span className="map-stats" data-testid="network-stats">
