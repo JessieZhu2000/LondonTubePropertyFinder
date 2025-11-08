@@ -46,9 +46,17 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ### Building for Production
 
 ```bash
-npm run build    # builds + exports static site to ./out
+npm run build    # builds static export (output: 'export') respecting optional NEXT_PUBLIC_BASE_PATH
 npm run start:static  # serves exported static site locally
 ```
+
+If deploying to GitHub Pages under a project site (URL includes the repository name), set:
+
+```
+NEXT_PUBLIC_BASE_PATH=/YourRepositoryName
+```
+
+Root user/org Pages repositories named <username>.github.io do NOT need a base path.
 
 ### Testing
 
