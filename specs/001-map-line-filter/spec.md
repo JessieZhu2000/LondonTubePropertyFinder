@@ -2,13 +2,14 @@
 
 **Feature Branch**: `001-map-line-filter`  
 **Created**: 2025-11-07  
-**Updated**: 2025-11-08  
-**Status**: In Development  
+**Updated**: 2025-11-08 (post production hardening & AdSense integration)  
+**Status**: Production Readiness Phase  
 **Input**: User description: "I am building a modern London Tube website. I want it to show all the London Tube stations including DLR line and its stations over google maps. Website should provide a simple clickable feature to filter all the tube lines. The website should show selected tube lines with its stations overlay on top of the google maps."
 
 **Update (2025-11-08)**: (Superseded) Temporary Northern line–only default used to validate filtering mechanics.  
 **Update (2025-11-08 later)**: Implemented full branch support using GeoJSON `MultiLineString` via consumption of all TfL `lineStrings` route geometry entries (Northern line rendered as 16 segments).  
-**Update (2025-11-08 revert)**: Restored default view to show the full Underground + DLR network (all lines visible initially) for comprehensive overview.
+**Update (2025-11-08 revert)**: Restored default view to show the full Underground + DLR network (all lines visible initially) for comprehensive overview.  
+**Update (2025-11-08 production)**: Added multi-select horizontal line filter, animated single-line focus zoom, Waterloo & City connectivity correction (reverse segment dedup + endpoint snapping), accessibility live region, SEO metadata, robots & sitemap, health endpoint, license, build/export pipeline, AdSense script injection.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -74,7 +75,7 @@ Visitors select multiple lines (e.g., Jubilee and DLR) to see how they intersect
 
 - What happens when no line is selected? The UI MUST show all lines (full network) with guidance on using the line filter.
 - How does the system handle an invalid filter combination? Selecting an unavailable line MUST surface a clear message and maintain the previous valid selection.
-- What if station data is temporarily unavailable? The map MUST show a fallback message and prevent blank map renders by displaying last-known data with staleness timestamp.
+- What if station data is temporarily unavailable? The map MUST show a fallback message and prevent blank map renders by displaying last-known data with staleness timestamp. (Currently: fallback list renders without timestamp; improvement scheduled.)
 - How is the experience handled on low-bandwidth connections? The map MUST prioritize lightweight map visuals first and progressively enhance details only after the initial view loads.
 - What if geolocation permissions are denied? The map MUST still load centered on Greater London without requesting user location repeatedly.
 - How are branched / forked lines represented? Branches MUST render as separate polyline segments (MultiLineString) sharing color & strokeWeight; bounds MUST include all segments.
@@ -101,6 +102,12 @@ Visitors select multiple lines (e.g., Jubilee and DLR) to see how they intersect
 - **FR-010**: System MUST degrade gracefully when the map provider is unreachable by presenting an accessible fallback list of stations and prominent status notice (image optional future enhancement).
 - **FR-011**: Default initial view MUST render the full Underground + DLR network (all lines, all stations) until user changes filter state.
 - **FR-012**: Bounds calculation MUST include every segment of a branched line to avoid clipping extreme termini.
+ - **FR-013**: When exactly one line is active, map MUST animate pan/zoom transition using easing for spatial context retention.
+ - **FR-014**: Provide accessibility live region updates on filter state changes (lines added/removed, reset to all lines).
+ - **FR-015**: Expose a `/api/health` JSON endpoint for uptime monitoring returning status and timestamp.
+ - **FR-016**: Include SEO-friendly metadata (OpenGraph, Twitter card) and static `robots.txt` + `sitemap.xml` assets.
+ - **FR-017**: Integrate Google AdSense script in document head for monetization (post policy compliance).
+ - **FR-018**: Build process MUST validate data schemas (`data:validate`) before transforming & exporting static site.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -117,7 +124,7 @@ Visitors select multiple lines (e.g., Jubilee and DLR) to see how they intersect
 
 ### Measurable Outcomes
 
-- **SC-001**: 90% of first-time visitors see an interactive map with the Northern line (all branches) within 3 seconds on a simulated 3G connection.
+- **SC-001**: 90% of first-time visitors see interactive full-network map within 3 seconds on a simulated 3G connection.
 - **SC-002**: 95% of line filter interactions (single-line switch) complete map updates (including branch segment visibility changes) within 500 ms across latest two major versions of iOS Safari & Android Chrome.
 - **SC-003**: Accessibility audit scores meet or exceed WCAG 2.1 AA with zero critical violations for map navigation, filter controls, station info, and branch rendering.
 - **SC-004**: At least 80% of usability test participants successfully plan a multi-line journey (identify an interchange across branched segments) within two filter interactions.
@@ -139,23 +146,28 @@ Visitors select multiple lines (e.g., Jubilee and DLR) to see how they intersect
 - ✅ Google Maps loader with lazy initialization and error handling
 - ✅ MapCanvas component renders branched lines (MultiLineString support) + interactive fallback UI
 - ✅ StationTooltip component for station details
-- ✅ MapExperience wrapper integrating map and state management (default Northern line)
+- ✅ MapExperience wrapper integrating map and state management (default all lines)
 - ✅ Accessibility helpers for ARIA labels
 - ✅ Playwright E2E test framework configured
 - ✅ Jest unit test framework configured with ts-jest (tests pending)
 - ✅ Lighthouse CI configuration for performance audits
 
-### Active Development
-- 🚧 Line filter UI component (User Story 2)
-- 🚧 Multi-line selection support (User Story 3)
-- 🚧 Unit test coverage (MapCanvas branching logic, data pipeline)
-- 🚧 Analytics logging for filter interactions (FR-009)
+### Active Development (Updated)
+ - ✅ Multi-select line filter (horizontal layout, All Lines pill)
+ - ✅ Animated single-line focus (smooth pan/zoom)
+ - 🚧 Enhanced SSR fallback (pre-render static legend + station count for crawlers)
+ - 🚧 Expanded analytics (line selection event batching, performance metrics)
+ - 🚧 Station accessibility metadata enrichment (future data source)
+ - 🚧 Reduced-motion preference support for animation opt-out
 
-### Known Issues
-- Google Maps API key must be set in `.env.local` or map falls back to simplified station list
-- Jest configured with `passWithNoTests: true` temporarily (remove after adding tests)
-- Filter UI not yet implemented (only Northern line visible by design)
-- No visual distinction between branches of same line (future enhancement)
+### Known Issues (Updated)
+ - Google Maps API key must be set in `.env.local` or map falls back to simplified station list.
+ - Jest configured with `passWithNoTests: true` until core unit tests are added.
+ - SSR HTML still minimal (map relies on client); crawler view could be richer.
+ - No explicit reduced-motion handling for animated zoom (will consult prefers-reduced-motion).
+ - Branch visual distinction (thicker trunk vs branch stroke) not yet implemented.
+ - Waterloo & City fix relies on manual endpoint snapping; consider algorithmic endpoint tolerance parameterization.
+ - AdSense inclusion requires production domain verification; ads may not render until approval.
 
 ### File Format Change
 - **Original plan**: Use `.geojson` file extensions  
@@ -168,3 +180,7 @@ Visitors select multiple lines (e.g., Jubilee and DLR) to see how they intersect
 - Lines with >1 segment serialized as `MultiLineString`; single-segment lines remain `LineString`.
 - Bounds calculated over union of all segment points.
 - Fallback: if no segments parsed, station lat/lon sequence used to create synthetic single `LineString`.
+ - Connectivity Correction: Waterloo & City route sequence contained reversed duplicate segment; transformation removes reverse duplicates and snaps terminal coordinates to nearest declared station positions (<50m tolerance) to avoid visual gap.
+ - Animation: Single-line activation triggers bounds fit simulation → captured target center/zoom → eased transition (cubic in/out, 700ms).
+ - Performance: Overlay reuse instead of full map re-instantiation; visibility toggled by `setMap(null|map)` for markers/polylines.
+ - Accessibility: Station marker ARIA labels list served lines; live region announces filter state changes.
